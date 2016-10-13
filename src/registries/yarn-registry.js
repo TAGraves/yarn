@@ -26,6 +26,7 @@ export const DEFAULTS = {
   'ignore-scripts': false,
   'ignore-optional': false,
   registry: YARN_REGISTRY,
+  'strict-ssl': true,
   'user-agent': [
     `yarn/${pkg.version}`,
     'npm/?',
@@ -56,12 +57,19 @@ export default class YarnRegistry extends NpmRegistry {
   homeConfig: Object;
 
   getOption(key: string): mixed {
-    let val = this.config[key] || this.registries.npm.getOption(npmMap[key]);
+    let val = this.config[key];
+
+    if (typeof val === 'undefined') {
+      val = this.registries.npm.getOption(npmMap[key]);
+    }
 
     // if we have no yarn option for this or have used a default then use the npm
     // value if it exists
-    if (!val || val === DEFAULTS[key]) {
-      val = this.registries.npm.getOption(key) || val;
+    if (typeof val === 'undefined' || val === DEFAULTS[key]) {
+      val = this.registries.npm.getOption(key);
+      if (typeof val === 'undefined') {
+        val = DEFAULTS[key];
+      }
     }
 
     return val;
